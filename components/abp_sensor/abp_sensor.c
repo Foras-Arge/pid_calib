@@ -1,12 +1,17 @@
 #include "abp_sensor.h"
 #include "esp_log.h"
+#include "esp_check.h"
 #include <string.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_err.h"
 
 static const char *TAG = "abp";
 
 esp_err_t abp_sensor_init(abp_sensor_t *sensor, i2c_port_t port, gpio_num_t sda, gpio_num_t scl)
 {
-    if (!sensor) return ESP_ERR_INVALID_ARG;
+    if (!sensor)
+        return ESP_ERR_INVALID_ARG;
     sensor->port = port;
     sensor->sda = sda;
     sensor->scl = scl;
@@ -22,8 +27,7 @@ esp_err_t abp_sensor_init(abp_sensor_t *sensor, i2c_port_t port, gpio_num_t sda,
     i2c_device_config_t devcfg = {
         .dev_addr_length = I2C_ADDR_BIT_LEN_7,
         .device_address = ABP_DEFAULT_ADDRESS,
-        .scl_speed_hz = 100000
-    };
+        .scl_speed_hz = 100000};
     ESP_RETURN_ON_ERROR(i2c_master_bus_add_device(sensor->bus, &devcfg, &sensor->dev), TAG, "dev");
     sensor->offset = 0;
     return ESP_OK;
@@ -39,7 +43,8 @@ esp_err_t abp_sensor_calibrate(abp_sensor_t *sensor, uint8_t samples)
 {
     int32_t sum = 0;
     int16_t raw;
-    for (uint8_t i=0;i<samples;i++) {
+    for (uint8_t i = 0; i < samples; i++)
+    {
         ESP_RETURN_ON_ERROR(abp_sensor_read_raw(sensor, &raw), TAG, "read");
         sum += raw;
         vTaskDelay(pdMS_TO_TICKS(10));
@@ -52,8 +57,9 @@ esp_err_t abp_sensor_calibrate(abp_sensor_t *sensor, uint8_t samples)
 esp_err_t abp_sensor_read_raw(abp_sensor_t *sensor, int16_t *raw)
 {
     uint8_t buf[2];
-    esp_err_t ret = i2c_master_receive(sensor->dev, buf, sizeof(buf), 1000/portTICK_PERIOD_MS);
-    if (ret != ESP_OK) return ret;
+    esp_err_t ret = i2c_master_receive(sensor->dev, buf, sizeof(buf), 1000 / portTICK_PERIOD_MS);
+    if (ret != ESP_OK)
+        return ret;
     *raw = ((buf[0] & 0x3F) << 8) | buf[1];
     return ESP_OK;
 }

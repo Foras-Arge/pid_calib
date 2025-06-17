@@ -9,5 +9,6 @@
   "idf.toolsPathWin": "c:\\espidf24\\tool",
   "idf.customExtraVars": {
     "IDF_TARGET": "esp32s3"
-  }
+  },
+  "idf.flashType": "UART"
 }
